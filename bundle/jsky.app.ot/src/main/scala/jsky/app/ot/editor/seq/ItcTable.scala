@@ -36,6 +36,7 @@ object ItcTable {
   abstract sealed class Renderer[A](alignment: Alignment.Value, f: A => (Icon, String)) extends LabelRenderer[A](f)  {
     override def componentFor(table : Table, isSelected : Boolean, hasFocus : Boolean, a : A, row : Int, column : Int) : Component = {
       val c = super.componentFor(table, isSelected, hasFocus, a, row, column)
+<<<<<<< HEAD
       val model = table.model.asInstanceOf[ItcTableModel]
       // Use SequenceCellRenderer based background color. This gives us coherent color coding throughout
       // the different tables in the sequence node.
@@ -63,6 +64,36 @@ object ItcTable {
 
   // Render a double value with two decimal digits
   case object DoubleRenderer extends Renderer[Double](Alignment.Right, d => (null, f"$d%.2f"))
+=======
+      val l = c.asInstanceOf[Label]
+      val model = table.model.asInstanceOf[ItcTableModel]
+      // Cell renderer based on the sequence cell renderer used for other sequence tables. This gives us coherent
+      // formatting and color coding throughout the different tables in the sequence node.
+      val bg = model.getKeyAt(column).map(SequenceCellRenderer.lookupColor)
+      val tt = model.tooltip(column)
+      // set horizontal alignment, bg color and tooltip as needed
+      l <|
+        (_.horizontalAlignment  = alignment)                  <|
+        (_.background           = bg.getOrElse(l.background)) <|
+        (_.tooltip              = tt)
+    }
+  }
+
+  // Render anything by turning it into a string
+  case object AnyRenderer extends Renderer(Alignment.Left, (o: AnyRef) => (null, o.toString))
+
+  // Render an optional double value as int (rounded)
+  case object IntRenderer extends Renderer(Alignment.Right, (o: AnyRef) => (null, o match {
+    case None             => ""
+    case Some(d: Double)  => f"$d%.0f"
+  }))
+
+  // Render an optional double value with two decimal digits
+  case object DoubleRenderer extends Renderer(Alignment.Right, (o: AnyRef) => (null, o match {
+    case None             => ""
+    case Some(d: Double)  => f"$d%.2f"
+  }))
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
 
 }
 
@@ -104,11 +135,16 @@ trait ItcTable extends Table {
   }
 
   override def rendererComponent(sel: Boolean, foc: Boolean, row: Int, col: Int) = {
+<<<<<<< HEAD
     model.getValueAt(row, col) match {
       case Some(i: Int)    => IntRenderer.componentFor(this, sel, foc, i, row, col)
       case Some(d: Double) => DoubleRenderer.componentFor(this, sel, foc, d, row, col)
       case v               => AnyRenderer.componentFor(this, sel, foc, v, row, col)
     }
+=======
+    val value = model.getValueAt(row, col)
+    model.asInstanceOf[ItcTableModel].renderer(col).componentFor(this, sel, foc, value, row, col)
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
   }
 
   private def sequence() = Option(owner.getContextObservation).fold(new ConfigSequence) {
@@ -149,8 +185,13 @@ trait ItcTable extends Table {
     // Do the service call
     ItcService.calculate(peer, src, obs, cond, tele, ins).
 
+<<<<<<< HEAD
       // whenever service call is finished notify table to update its contents
       andThen {
+=======
+    // whenever service call is finished notify table to update its contents
+    andThen {
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
       case _ => Swing.onEDT {
         this.peer.getModel.asInstanceOf[AbstractTableModel].fireTableDataChanged()
         // make all columns as wide as needed

@@ -7,14 +7,33 @@ import edu.gemini.shared.util.StringUtil
 import edu.gemini.spModel.config2.ItemKey
 
 import scala.concurrent.Future
+<<<<<<< HEAD
+=======
+import scala.swing.Table.LabelRenderer
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
 import scala.util.{Failure, Success}
 import scalaz.Scalaz._
 
 /** Columns in the table are defined by their header label and a function on the unique config of the row. */
+<<<<<<< HEAD
 case class Column(label: String, value: (ItcUniqueConfig, Future[ItcService.Result]) => AnyRef, tooltip: String = "")
 
 object ItcTableModel {
   val PeakPixelTooltip = "Peak pixel value = signal + background"
+=======
+case class Column[A](label: String, value: (ItcUniqueConfig, Future[ItcService.Result]) => Object, renderer: LabelRenderer[AnyRef] = ItcTable.AnyRenderer, tooltip: String = "")
+
+object ItcTableModel {
+  val PeakPixelTooltip = "Peak pixel value = signal + background [ADU]"
+
+  /** Defines a set of header columns for all tables. */
+  val Headers = Seq(
+    Column("Data Labels",     (c, r) => c.labels),
+    Column("Images",          (c, r) => new java.lang.Integer(c.count),             tooltip = "Number of exposures used in S/N calculation"),
+    Column("Exposure Time",   (c, r) => new java.lang.Double(c.singleExposureTime), tooltip = "Exposure time of each image [s]"),
+    Column("Total Exp. Time", (c, r) => new java.lang.Double(c.totalExposureTime),  tooltip = "Total exposure time [s]")
+  )
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
 }
 
 /** ITC tables have three types of columns: a series of header columns, then all the values that change and are
@@ -23,6 +42,7 @@ object ItcTableModel {
   */
 sealed trait ItcTableModel extends AbstractTableModel {
 
+<<<<<<< HEAD
   /** Defines a set of header columns for all tables. */
   val Headers = Seq(
     Column("Data Labels",     (c, r) => c.labels),
@@ -32,6 +52,48 @@ sealed trait ItcTableModel extends AbstractTableModel {
     Column("Source Mag",      (c, r) => sourceMag(r),                               tooltip = "Source magnitude [mag]"),
     Column("Source Band",     (c, r) => sourceBand(r),                              tooltip = "Source band")
   )
+=======
+  val headers: Seq[Column[_]]
+  val keys: Seq[ItemKey]
+  val results: Seq[Column[_]]
+
+  val uniqueSteps: Seq[ItcUniqueConfig]
+  val res: Seq[Future[ItcService.Result]]
+
+  override def getRowCount: Int = uniqueSteps.size
+
+  override def getColumnCount: Int = headers.size + keys.size + results.size
+
+  override def getValueAt(row: Int, col: Int): Object = col match {
+    case c if c <  headers.size             => header(col).value(uniqueSteps(row), res(row))
+    case c if c >= headers.size + keys.size => result(col).value(uniqueSteps(row), res(row))
+    case _                                  => uniqueSteps(row).config.getItemValue(key(col))
+  }
+
+  override def getColumnName(col: Int): String = col match {
+    case c if c <  headers.size             => header(col).label
+    case c if c >= headers.size + keys.size => result(col).label
+    case _                                  => StringUtil.toDisplayName(key(col).getName)
+  }
+
+  def renderer(col: Int): LabelRenderer[AnyRef] = col match {
+    case c if c <  headers.size             => header(col).renderer
+    case c if c >= headers.size + keys.size => result(col).renderer
+    case _                                  => ItcTable.AnyRenderer
+  }
+
+  def tooltip(col: Int): String = col match {
+    case c if c <  headers.size             => header(col).tooltip
+    case c if c >= headers.size + keys.size => result(col).tooltip
+    case _                                  => key(col).getPath
+  }
+
+  // Gets the ItemKey of a column (if any), this is used by the table to color code the columns.
+  def getKeyAt(col: Int): Option[ItemKey] = col match {
+    case c if c >= headers.size && c < headers.size + keys.size => Some(key(col))
+    case _                                                      => None
+  }
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
 
   val headers:      Seq[Column]  = Headers  // override this in case different header columns are needed..
   val keys:         Seq[ItemKey]
@@ -64,6 +126,7 @@ sealed trait ItcTableModel extends AbstractTableModel {
       }
     }
 
+<<<<<<< HEAD
   protected def peakPixelFlux(result: Future[ItcService.Result], ccd: Int = 0) = imagingResult(result, ccd).map(_.peakPixelFlux.toInt)
 
   protected def singleSNRatio(result: Future[ItcService.Result], ccd: Int = 0) = imagingResult(result, ccd).map(_.singleSNRatio)
@@ -126,6 +189,14 @@ sealed trait ItcTableModel extends AbstractTableModel {
         case scalaz.Success(_)    => "OK"
       }
     }
+=======
+  protected def peakPixelFlux(result: Future[ItcService.Result], ccd: Int = 0) = imagingResult(result, ccd).map(_.peakPixelFlux)
+
+  protected def singleSNRatio(result: Future[ItcService.Result], ccd: Int = 0) = imagingResult(result, ccd).map(_.singleSNRatio)
+
+  protected def totalSNRatio (result: Future[ItcService.Result], ccd: Int = 0) = imagingResult(result, ccd).map(_.totalSNRatio)
+  
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
 }
 
 
@@ -133,16 +204,25 @@ sealed trait ItcTableModel extends AbstractTableModel {
 sealed trait ItcImagingTableModel extends ItcTableModel
 
 class ItcGenericImagingTableModel(val keys: Seq[ItemKey], val uniqueSteps: Seq[ItcUniqueConfig], val res: Seq[Future[ItcService.Result]]) extends ItcImagingTableModel {
+<<<<<<< HEAD
   val results = Seq(
     Column("Peak",            (c, r) => peakPixelFlux(r),         tooltip = ItcTableModel.PeakPixelTooltip),
     Column("S/N Single",      (c, r) => singleSNRatio(r)),
     Column("S/N Total",       (c, r) => totalSNRatio (r)),
+=======
+  val headers = ItcTableModel.Headers
+  val results = Seq(
+    Column("Peak",            (c, r) => peakPixelFlux(r),         ItcTable.IntRenderer,       tooltip = ItcTableModel.PeakPixelTooltip),
+    Column("S/N Single",      (c, r) => singleSNRatio(r),         ItcTable.DoubleRenderer),
+    Column("S/N Total",       (c, r) => totalSNRatio (r),         ItcTable.DoubleRenderer),
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
     Column("Messages",        (c, r) => messages(r))
   )
 }
 
 /** GMOS specific ITC imaging table model. */
 class ItcGmosImagingTableModel(val keys: Seq[ItemKey], val uniqueSteps: Seq[ItcUniqueConfig], val res: Seq[Future[ItcService.Result]]) extends ItcImagingTableModel {
+<<<<<<< HEAD
   val results = Seq(
     Column("CCD1 Peak",       (c, r) => peakPixelFlux(r, ccd=0),   tooltip = ItcTableModel.PeakPixelTooltip + " for CCD 1"),
     Column("CCD1 S/N Single", (c, r) => singleSNRatio(r, ccd=0)),
@@ -153,6 +233,19 @@ class ItcGmosImagingTableModel(val keys: Seq[ItemKey], val uniqueSteps: Seq[ItcU
     Column("CCD3 Peak",       (c, r) => peakPixelFlux(r, ccd=2),   tooltip = ItcTableModel.PeakPixelTooltip + " for CCD 3"),
     Column("CCD3 S/N Single", (c, r) => singleSNRatio(r, ccd=2)),
     Column("CCD3 S/N Total",  (c, r) => totalSNRatio (r, ccd=2)),
+=======
+  val headers = ItcTableModel.Headers
+  val results = Seq(
+    Column("CCD1 Peak",       (c, r) => peakPixelFlux(r, ccd=0),   ItcTable.IntRenderer,      tooltip = ItcTableModel.PeakPixelTooltip + " for CCD 1"),
+    Column("CCD1 S/N Single", (c, r) => singleSNRatio(r, ccd=0),   ItcTable.DoubleRenderer),
+    Column("CCD1 S/N Total",  (c, r) => totalSNRatio (r, ccd=0),   ItcTable.DoubleRenderer),
+    Column("CCD2 Peak",       (c, r) => peakPixelFlux(r, ccd=1),   ItcTable.IntRenderer,      tooltip = ItcTableModel.PeakPixelTooltip + " for CCD 2"),
+    Column("CCD2 S/N Single", (c, r) => singleSNRatio(r, ccd=1),   ItcTable.DoubleRenderer),
+    Column("CCD2 S/N Total",  (c, r) => totalSNRatio (r, ccd=1),   ItcTable.DoubleRenderer),
+    Column("CCD3 Peak",       (c, r) => peakPixelFlux(r, ccd=2),   ItcTable.IntRenderer,      tooltip = ItcTableModel.PeakPixelTooltip + " for CCD 3"),
+    Column("CCD3 S/N Single", (c, r) => singleSNRatio(r, ccd=2),   ItcTable.DoubleRenderer),
+    Column("CCD3 S/N Total",  (c, r) => totalSNRatio (r, ccd=2),   ItcTable.DoubleRenderer),
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
     Column("Messages",        (c, r) => messages(r))
   )
 }
@@ -162,6 +255,10 @@ class ItcGmosImagingTableModel(val keys: Seq[ItemKey], val uniqueSteps: Seq[ItcU
 sealed trait ItcSpectroscopyTableModel extends ItcTableModel
 
 class ItcGenericSpectroscopyTableModel(val keys: Seq[ItemKey], val uniqueSteps: Seq[ItcUniqueConfig], val res: Seq[Future[ItcService.Result]]) extends ItcSpectroscopyTableModel {
+<<<<<<< HEAD
+=======
+  val headers = ItcTableModel.Headers
+>>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
   val results = Seq(
     Column("Messages",        (c, r) => messages(r))
   )

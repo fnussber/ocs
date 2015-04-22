@@ -70,11 +70,11 @@ object ItcTable {
 =======
 >>>>>>> OCSADV-295: Code change.
       val model = table.model.asInstanceOf[ItcTableModel]
-      // Cell renderer based on the sequence cell renderer used for other sequence tables. This gives us coherent
-      // formatting and color coding throughout the different tables in the sequence node.
-      val bg = model.getKeyAt(column).map(SequenceCellRenderer.lookupColor)
+      // Use SequenceCellRenderer based background color. This gives us coherent color coding throughout
+      // the different tables in the sequence node.
+      val bg = model.key(column).map(SequenceCellRenderer.lookupColor)
       val tt = model.tooltip(column)
-      // set horizontal alignment, bg color and tooltip as needed
+      // set label horizontal alignment, bg color and tooltip as needed
       c.asInstanceOf[Label] <| { l =>
         l.horizontalAlignment = alignment
         l.background = bg.getOrElse(l.background)
@@ -83,21 +83,28 @@ object ItcTable {
     }
   }
 
-  // Render anything by turning it into a string
-  case object AnyRenderer extends Renderer(Alignment.Left, (o: AnyRef) => (null, o.toString))
-
-  // Render an optional double value as int (rounded)
-  case object IntRenderer extends Renderer(Alignment.Right, (o: AnyRef) => (null, o match {
+  // Render anything by turning it into a string (or ignore it if empty)
+  case object AnyRenderer extends Renderer(Alignment.Left, (o: AnyRef) => (null, o match {
+    case null             => ""
     case None             => ""
-    case Some(d: Double)  => f"$d%.0f"
+    case Some(s)          => s.toString
+    case x                => x.toString
   }))
 
+<<<<<<< HEAD
   // Render an optional double value with two decimal digits
   case object DoubleRenderer extends Renderer(Alignment.Right, (o: AnyRef) => (null, o match {
     case None             => ""
     case Some(d: Double)  => f"$d%.2f"
   }))
 >>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
+=======
+  // Render an int value
+  case object IntRenderer extends Renderer[Int](Alignment.Right, i => (null, i.toString))
+
+  // Render a double value with two decimal digits
+  case object DoubleRenderer extends Renderer[Double](Alignment.Right, d => (null, f"$d%.2f"))
+>>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
 
 }
 
@@ -140,15 +147,21 @@ trait ItcTable extends Table {
 
   override def rendererComponent(sel: Boolean, foc: Boolean, row: Int, col: Int) = {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
     model.getValueAt(row, col) match {
       case Some(i: Int)    => IntRenderer.componentFor(this, sel, foc, i, row, col)
       case Some(d: Double) => DoubleRenderer.componentFor(this, sel, foc, d, row, col)
       case v               => AnyRenderer.componentFor(this, sel, foc, v, row, col)
     }
+<<<<<<< HEAD
 =======
     val value = model.getValueAt(row, col)
     model.asInstanceOf[ItcTableModel].renderer(col).componentFor(this, sel, foc, value, row, col)
 >>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
+=======
+>>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
   }
 
   private def sequence() = Option(owner.getContextObservation).fold(new ConfigSequence) {
@@ -190,12 +203,17 @@ trait ItcTable extends Table {
     ItcService.calculate(peer, src, obs, cond, tele, ins).
 
 <<<<<<< HEAD
+<<<<<<< HEAD
       // whenever service call is finished notify table to update its contents
       andThen {
 =======
     // whenever service call is finished notify table to update its contents
     andThen {
 >>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
+=======
+      // whenever service call is finished notify table to update its contents
+      andThen {
+>>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
       case _ => Swing.onEDT {
         this.peer.getModel.asInstanceOf[AbstractTableModel].fireTableDataChanged()
         // make all columns as wide as needed

@@ -37,6 +37,7 @@ object ItcTable {
     override def componentFor(table : Table, isSelected : Boolean, hasFocus : Boolean, a : A, row : Int, column : Int) : Component = {
       val c = super.componentFor(table, isSelected, hasFocus, a, row, column)
 <<<<<<< HEAD
+<<<<<<< HEAD
       val model = table.model.asInstanceOf[ItcTableModel]
       // Use SequenceCellRenderer based background color. This gives us coherent color coding throughout
       // the different tables in the sequence node.
@@ -66,16 +67,19 @@ object ItcTable {
   case object DoubleRenderer extends Renderer[Double](Alignment.Right, d => (null, f"$d%.2f"))
 =======
       val l = c.asInstanceOf[Label]
+=======
+>>>>>>> OCSADV-295: Code change.
       val model = table.model.asInstanceOf[ItcTableModel]
       // Cell renderer based on the sequence cell renderer used for other sequence tables. This gives us coherent
       // formatting and color coding throughout the different tables in the sequence node.
       val bg = model.getKeyAt(column).map(SequenceCellRenderer.lookupColor)
       val tt = model.tooltip(column)
       // set horizontal alignment, bg color and tooltip as needed
-      l <|
-        (_.horizontalAlignment  = alignment)                  <|
-        (_.background           = bg.getOrElse(l.background)) <|
-        (_.tooltip              = tt)
+      c.asInstanceOf[Label] <| { l =>
+        l.horizontalAlignment = alignment
+        l.background = bg.getOrElse(l.background)
+        l.tooltip = tt
+      }
     }
   }
 

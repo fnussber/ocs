@@ -8,7 +8,7 @@ import edu.gemini.itc.shared._
 import edu.gemini.pot.sp.SPComponentType
 import edu.gemini.spModel.gemini.obscomp.SPSiteQuality.{CloudCover, ImageQuality, SkyBackground, WaterVapor}
 
-import scala.swing.GridBagPanel.{Anchor, Fill}
+import scala.swing.GridBagPanel.Fill
 import scala.swing.ListView.Renderer
 import scala.swing.ScrollPane.BarPolicy._
 import scala.swing._

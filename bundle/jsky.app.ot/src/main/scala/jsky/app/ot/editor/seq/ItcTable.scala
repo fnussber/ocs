@@ -36,8 +36,6 @@ object ItcTable {
   abstract sealed class Renderer[A](alignment: Alignment.Value, f: A => (Icon, String)) extends LabelRenderer[A](f)  {
     override def componentFor(table : Table, isSelected : Boolean, hasFocus : Boolean, a : A, row : Int, column : Int) : Component = {
       val c = super.componentFor(table, isSelected, hasFocus, a, row, column)
-<<<<<<< HEAD
-<<<<<<< HEAD
       val model = table.model.asInstanceOf[ItcTableModel]
       // Use SequenceCellRenderer based background color. This gives us coherent color coding throughout
       // the different tables in the sequence node.
@@ -65,46 +63,6 @@ object ItcTable {
 
   // Render a double value with two decimal digits
   case object DoubleRenderer extends Renderer[Double](Alignment.Right, d => (null, f"$d%.2f"))
-=======
-      val l = c.asInstanceOf[Label]
-=======
->>>>>>> OCSADV-295: Code change.
-      val model = table.model.asInstanceOf[ItcTableModel]
-      // Use SequenceCellRenderer based background color. This gives us coherent color coding throughout
-      // the different tables in the sequence node.
-      val bg = model.key(column).map(SequenceCellRenderer.lookupColor)
-      val tt = model.tooltip(column)
-      // set label horizontal alignment, bg color and tooltip as needed
-      c.asInstanceOf[Label] <| { l =>
-        l.horizontalAlignment = alignment
-        l.background = bg.getOrElse(l.background)
-        l.tooltip = tt
-      }
-    }
-  }
-
-  // Render anything by turning it into a string (or ignore it if empty)
-  case object AnyRenderer extends Renderer(Alignment.Left, (o: AnyRef) => (null, o match {
-    case null             => ""
-    case None             => ""
-    case Some(s)          => s.toString
-    case x                => x.toString
-  }))
-
-<<<<<<< HEAD
-  // Render an optional double value with two decimal digits
-  case object DoubleRenderer extends Renderer(Alignment.Right, (o: AnyRef) => (null, o match {
-    case None             => ""
-    case Some(d: Double)  => f"$d%.2f"
-  }))
->>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
-=======
-  // Render an int value
-  case object IntRenderer extends Renderer[Int](Alignment.Right, i => (null, i.toString))
-
-  // Render a double value with two decimal digits
-  case object DoubleRenderer extends Renderer[Double](Alignment.Right, d => (null, f"$d%.2f"))
->>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
 
 }
 
@@ -146,22 +104,11 @@ trait ItcTable extends Table {
   }
 
   override def rendererComponent(sel: Boolean, foc: Boolean, row: Int, col: Int) = {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
     model.getValueAt(row, col) match {
       case Some(i: Int)    => IntRenderer.componentFor(this, sel, foc, i, row, col)
       case Some(d: Double) => DoubleRenderer.componentFor(this, sel, foc, d, row, col)
       case v               => AnyRenderer.componentFor(this, sel, foc, v, row, col)
     }
-<<<<<<< HEAD
-=======
-    val value = model.getValueAt(row, col)
-    model.asInstanceOf[ItcTableModel].renderer(col).componentFor(this, sel, foc, value, row, col)
->>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
-=======
->>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
   }
 
   private def sequence() = Option(owner.getContextObservation).fold(new ConfigSequence) {
@@ -202,18 +149,8 @@ trait ItcTable extends Table {
     // Do the service call
     ItcService.calculate(peer, src, obs, cond, tele, ins).
 
-<<<<<<< HEAD
-<<<<<<< HEAD
       // whenever service call is finished notify table to update its contents
       andThen {
-=======
-    // whenever service call is finished notify table to update its contents
-    andThen {
->>>>>>> OCSADV-295: ITC tables: tooltips, alignment, rounding of double values.
-=======
-      // whenever service call is finished notify table to update its contents
-      andThen {
->>>>>>> OCSADV-295: Extraction of source magnitude and band, added source mag and band to results.
       case _ => Swing.onEDT {
         this.peer.getModel.asInstanceOf[AbstractTableModel].fireTableDataChanged()
         // make all columns as wide as needed

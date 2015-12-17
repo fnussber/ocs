@@ -14,7 +14,6 @@ import edu.gemini.spModel.gemini.nifs.InstNIFS
 import edu.gemini.spModel.gemini.niri.InstNIRI
 import jsky.app.ot.itc._
 import jsky.app.ot.util.OtColor
-import org.jfree.chart.{ChartPanel, JFreeChart}
 
 import scala.concurrent.Future
 import scala.swing.GridBagPanel.{Anchor, Fill}
@@ -284,7 +283,7 @@ private class ItcChartsPanel(table: ItcSpectroscopyTable) extends GridBagPanel {
     result.chartGroups.zipWithIndex.foreach { case (g, y) =>
       g.charts.zipWithIndex.foreach { case (c, x) =>
         val chart = ITCChart.forSpcDataSet(c, limitsPanel.plottingDetails).getChart
-        layout(new JFChartComponent(chart)) = new Constraints {
+        layout(new JFreeChartComponent(chart)) = new Constraints {
           gridx   = x
           gridy   = y + 1 // 0 is used by limits panel
           weightx = 1
@@ -294,15 +293,6 @@ private class ItcChartsPanel(table: ItcSpectroscopyTable) extends GridBagPanel {
         }
       }
     }
-
-  }
-
-  // a very simple Scala wrapper for JFreeChart charts
-  class JFChartComponent(chart: JFreeChart) extends Component {
-    override lazy val peer = new ChartPanel(chart)
-    peer.setMaximumDrawHeight(Int.MaxValue)                       // don't limit drawing resolution
-    peer.setMaximumDrawWidth(Int.MaxValue)                        // don't limit drawing resolution
-    peer.setBackground(Color.white)
   }
 
 }

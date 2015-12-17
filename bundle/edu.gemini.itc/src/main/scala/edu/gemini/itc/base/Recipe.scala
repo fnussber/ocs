@@ -70,10 +70,10 @@ object Recipe {
     ItcCcd(r.is2nCalc.singleSNRatio(), r.is2nCalc.totalSNRatio(), r.peakPixelCount, r.instrument.wellDepth, r.instrument.gain, Warning.collectWarnings(r))
 
   def serviceResult(r: ImagingResult): ItcImagingResult =
-    ItcImagingResult(List(toCcdData(r)))
+    ItcImagingResult(r.parameters, List(toCcdData(r)))
 
   def serviceResult(r: Array[ImagingResult]): ItcImagingResult =
-    ItcImagingResult(r.map(toCcdData).toList)
+    ItcImagingResult(r(0).parameters, r.map(toCcdData).toList)
 
   // === Spectroscopy
 
@@ -93,16 +93,16 @@ object Recipe {
 
   // One result (CCD) and a simple set of charts, this covers most cases.
   def serviceResult(r: SpectroscopyResult, charts: java.util.List[SpcChartData]): ItcSpectroscopyResult =
-    ItcSpectroscopyResult(List(toCcdData(r, charts.toList)), List(SpcChartGroup(charts.toList)))
+    ItcSpectroscopyResult(r.parameters, List(toCcdData(r, charts.toList)), List(SpcChartGroup(charts.toList)))
 
   // One result (CCD) and a set of groups of charts, this covers NIFS (1 CCD and separate groups for IFU cases).
   def serviceGroupedResult(r: SpectroscopyResult, charts: java.util.List[java.util.List[SpcChartData]]): ItcSpectroscopyResult =
-    ItcSpectroscopyResult(List(toCcdData(r, charts.toList.flatten)), charts.toList.map(l => SpcChartGroup(l.toList)))
+    ItcSpectroscopyResult(r.parameters, List(toCcdData(r, charts.toList.flatten)), charts.toList.map(l => SpcChartGroup(l.toList)))
 
   // A set of results and a set of groups of charts, this covers GMOS (3 CCDs and potentially separate groups
   // for IFU cases, if IFU is activated).
   def serviceGroupedResult(rs: Array[SpectroscopyResult], charts: java.util.List[java.util.List[SpcChartData]]): ItcSpectroscopyResult =
-    ItcSpectroscopyResult(rs.map(r => toCcdData(r, charts.toList.flatten)).toList, charts.toList.map(l => SpcChartGroup(l.toList)))
+    ItcSpectroscopyResult(rs(0).parameters, rs.map(r => toCcdData(r, charts.toList.flatten)).toList, charts.toList.map(l => SpcChartGroup(l.toList)))
 
 }
 

@@ -2,6 +2,7 @@ package edu.gemini.itc.web.servlets;
 
 import edu.gemini.itc.shared.*;
 import org.jfree.chart.ChartUtilities;
+import scala.Option;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -121,30 +122,42 @@ public final class FilesServlet extends HttpServlet {
         }
     }
 
-    private static BufferedImage toImage(final String id, final String filename, final int index, final PlottingDetails pd) {
-        final ItcSpectroscopyResult results = result(id);
+    private static BufferedImage toImage(final String id, final String filename, final int ix, final PlottingDetails pd) {
+        final ItcSpectroscopyResult r = result(id);
         final ITCChart chart;
         switch (filename) {
-            case "SignalChart":       chart = ITCChart.forSpcDataSet(results.chart(SignalChart.instance(),      index), pd); break;
-            case "S2NChart":          chart = ITCChart.forSpcDataSet(results.chart(S2NChart.instance(),         index), pd); break;
-            case "SignalPixelChart":  chart = ITCChart.forSpcDataSet(results.chart(SignalPixelChart.instance(), index), pd); break;
-            default:            throw new Error();
+            case "SignalChart":       chart = toChart(r, SignalChart.instance(),      ix, pd); break;
+            case "S2NChart":          chart = toChart(r, S2NChart.instance(),         ix, pd); break;
+            case "SignalPixelChart":  chart = toChart(r, SignalPixelChart.instance(), ix, pd); break;
+            default:                  throw new Error("invalid chart type " + filename);
         }
         return chart.getBufferedImage(800, 600);
     }
 
+    private static ITCChart toChart(final ItcSpectroscopyResult r, final SpcChartType chartType, final int ix, final PlottingDetails pd) {
+        final Option<SpcChartData> chart = r.chart(chartType, ix);
+        if (chart.isEmpty()) throw new Error("invalid chart type or chart index");
+        return ITCChart.forSpcDataSet(chart.get(), pd);
+    }
+
     // this is public because we use it for testing
-    public static String toFile(final String id, final String filename, final int chartIndex, final Optional<Integer> seriesIndex) {
-        final ItcSpectroscopyResult result = result(id);
+    public static String toFile(final String id, final String filename, final int ix, final Optional<Integer> seriesIx) {
+        final ItcSpectroscopyResult r = result(id);
         final String file;
         switch (filename) {
-            case "SignalData":     file = toFile(result.chart(SignalChart.instance(), chartIndex).allSeriesAsJava(SignalData.instance()),     seriesIndex); break;
-            case "BackgroundData": file = toFile(result.chart(SignalChart.instance(), chartIndex).allSeriesAsJava(BackgroundData.instance()), seriesIndex); break;
-            case "SingleS2NData":  file = toFile(result.chart(S2NChart.instance(),    chartIndex).allSeriesAsJava(SingleS2NData.instance()),  seriesIndex); break;
-            case "FinalS2NData":   file = toFile(result.chart(S2NChart.instance(),    chartIndex).allSeriesAsJava(FinalS2NData.instance()),   seriesIndex); break;
-            default:               throw new Error();
+            case "SignalData":     file = toFile(r, SignalChart.instance(), SignalData.instance(),     ix, seriesIx); break;
+            case "BackgroundData": file = toFile(r, SignalChart.instance(), BackgroundData.instance(), ix, seriesIx); break;
+            case "SingleS2NData":  file = toFile(r, S2NChart.instance(),    SingleS2NData.instance(),  ix, seriesIx); break;
+            case "FinalS2NData":   file = toFile(r, S2NChart.instance(),    FinalS2NData.instance(),   ix, seriesIx); break;
+            default:               throw new Error("invalid data type " + filename);
         }
         return "# ITC Data: " + Calendar.getInstance().getTime() + "\n \n" + file;
+    }
+
+    private static String toFile(final ItcSpectroscopyResult r, final SpcChartType chartType, final SpcDataType dataType, final int ix, final Optional<Integer> seriesIx) {
+        final Option<SpcChartData> chart = r.chart(chartType, ix);
+        if (chart.isEmpty()) throw new Error("invalid chart type or chart index");
+        return toFile(chart.get().allSeriesAsJava(dataType), seriesIx);
     }
 
     private static String toFile(final List<SpcSeriesData> dataSeries, final Optional<Integer> seriesIndex) {

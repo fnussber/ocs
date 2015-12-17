@@ -60,7 +60,7 @@ sealed trait ItcResult extends Serializable {
 
 // === IMAGING RESULTS
 
-final case class ItcImagingResult(ccds: List[ItcCcd]) extends ItcResult
+final case class ItcImagingResult(parameters: ItcParameters, ccds: List[ItcCcd]) extends ItcResult
 
 
 // === SPECTROSCOPY RESULTS
@@ -70,6 +70,9 @@ sealed trait SpcChartType
 case object SignalChart       extends SpcChartType { val instance = this } // signal and background over wavelength [nm]
 case object S2NChart          extends SpcChartType { val instance = this } // single and final S2N over wavelength [nm]
 case object SignalPixelChart  extends SpcChartType { val instance = this } // single and final S2N over wavelength [nm]
+object SpcChartType {
+  val Values = List(SignalChart, S2NChart, SignalPixelChart) // TODO: can we use NEL here??
+}
 
 // There are four different data sets
 sealed trait SpcDataType
@@ -77,6 +80,9 @@ case object SignalData        extends SpcDataType { val instance = this }  // si
 case object BackgroundData    extends SpcDataType { val instance = this }  // background over wavelength [nm]
 case object SingleS2NData     extends SpcDataType { val instance = this }  // single S2N over wavelength [nm]
 case object FinalS2NData      extends SpcDataType { val instance = this }  // final S2N over wavelength [nm]
+object SpcDataType {
+  val Values = List(SignalData, BackgroundData, SingleS2NData, FinalS2NData) // TODO: can we use NEL here??
+}
 
 /** Series of (x,y) data points used to create charts and text data files. */
 final case class SpcSeriesData(dataType: SpcDataType, title: String, data: Array[Array[Double]], color: Option[Color] = None) {
@@ -98,7 +104,9 @@ object ChartAxis {
   * This is for example useful to stack IFU results for different offsets on top of each other in the OT.
   * (At a later stage we maybe also want to add group labels like IFU offsets etc instead of repeating that
   * information in every chart title.)*/
-final case class SpcChartGroup(charts: List[SpcChartData])
+final case class SpcChartGroup(charts: List[SpcChartData]) { // TODO: should this be a map? a chart should be unique per group yes/no?
+  def chart(c: SpcChartType) = charts.find(_.chartType == c)
+}
 
 /** Charts are made up of a set of data series which are all plotted in the same XY-plot. */
 final case class SpcChartData(chartType: SpcChartType, title: String, xAxis: ChartAxis, yAxis: ChartAxis, series: List[SpcSeriesData], axes: List[ChartAxis] = List()) {
@@ -106,6 +114,7 @@ final case class SpcChartData(chartType: SpcChartType, title: String, xAxis: Cha
   require(series.map(_.title).distinct.size == series.size, "titles of series are not unique")
 
   /** Gets all data series for the given type. */
+  // TODO: this should probably return None for empty lists, ie. not data available?
   def allSeries(t: SpcDataType): List[SpcSeriesData] = series.filter(_.dataType == t)
 
   /** Gets all data series for the given type as Java lists. */
@@ -116,17 +125,16 @@ final case class SpcChartData(chartType: SpcChartType, title: String, xAxis: Cha
   * Individual charts and data series can be referenced by their types and group index. For most instruments there
   * is only one chart and data series of each type, however for NIFS and GMOS there will be several charts
   * of each type for each IFU element. */
-final case class ItcSpectroscopyResult(ccds: List[ItcCcd], chartGroups: List[SpcChartGroup]) extends ItcResult {
+final case class ItcSpectroscopyResult(parameters: ItcParameters, ccds: List[ItcCcd], chartGroups: List[SpcChartGroup]) extends ItcResult {
 
-  /** Gets chart data by type and its group index.
-    * This method will fail if the result you're looking for does not exist.
-    */
-  def chart(t: SpcChartType, i: Int = 0): SpcChartData = chartGroups(i).charts.filter(_.chartType == t).head
+  /** Gets a group by its index (if it exists). */
+  def group(i: Int = 0): Option[SpcChartGroup] = chartGroups.lift(i)
 
-  /** Gets all data series by chart type and data type.
-    * This method will fail if the result (chart/data) you're looking for does not exist.
-    */
-  def allSeries(ct: SpcChartType, dt: SpcDataType): List[SpcSeriesData] = chart(ct).allSeries(dt)
+  /** Gets chart data by type and its group index (or group 0 by default). */
+  def chart(t: SpcChartType, i: Int = 0): Option[SpcChartData] = group(i).flatMap(_.charts.find(_.chartType == t))
+
+  /** Gets all data series by chart type and data type (if series exists). */
+  def series(ct: SpcChartType, dt: SpcDataType, i: Int = 0): Option[List[SpcSeriesData]] = chart(ct, i).map(_.allSeries(dt))
 
 }
 

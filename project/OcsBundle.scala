@@ -76,7 +76,7 @@ trait OcsBundle {
       bundle_edu_gemini_itc_shared,
       bundle_edu_gemini_util_osgi,
       bundle_edu_gemini_shared_util,
-      bundle_edu_gemini_pot
+      bundle_edu_gemini_pot % "test->test;compile->compile"
     )
 
   lazy val bundle_edu_gemini_itc_web = 

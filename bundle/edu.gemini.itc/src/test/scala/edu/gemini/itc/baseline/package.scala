@@ -1,7 +1,7 @@
 package edu.gemini.itc
 
-import edu.gemini.itc.baseline.util.{Fixture, Data}
-import edu.gemini.itc.shared.{SpcDataType, SpcChartType}
+import edu.gemini.itc.baseline.util.{Data, Fixture}
+import edu.gemini.itc.shared._
 
 package object baseline {
 
@@ -11,7 +11,7 @@ package object baseline {
 
   final case class BaselineId(filename: String)
   object BaselineId {
-    def apply(f: Fixture[_], g: GroupIx, c: SpcChartType, d: SpcDataType, s: SeriesIx) = new BaselineId(s"${f.hash}.$g.$c.$d.$s.txt")
+    def apply[F <: InstrumentDetails](f: Fixture[F], g: GroupIx, c: SpcChartType, d: SpcDataType, s: SeriesIx) = new BaselineId(s"${f.hash}.$g.$c.$d.$s.txt")
   }
 
 }

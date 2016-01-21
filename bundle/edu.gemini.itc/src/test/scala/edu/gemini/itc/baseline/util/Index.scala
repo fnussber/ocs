@@ -3,22 +3,15 @@ package edu.gemini.itc.baseline.util
 import edu.gemini.itc.baseline._
 import edu.gemini.itc.shared.{InstrumentDetails, SpcDataType, SpcChartType, ItcSpectroscopyResult}
 
+
 // this is basically a iterator
 final case class Index[F <: InstrumentDetails](f: Fixture[F], r: ItcSpectroscopyResult, g: GroupIx, c: SpcChartType, d: SpcDataType) {
 
   def next(): Option[Index[F]] = {
 
-    // TODO: collapse this into a single for statement?
     val nd = next(d)
-    val nc = nd match {
-      case Some(_) => Some(c)
-      case None    => next(c)
-    }
-
-    val ng = nc match {
-      case Some(_) => Some(g)
-      case None    => next(g)
-    }
+    val nc = nd.fold(next(c))(_ => Option(c))
+    val ng = nc.fold(next(g))(_ => Option(g))
 
     for {
       dd <- nd.orElse(Some(SpcDataType.Values.head))    // reset to first value and advance chart
@@ -38,6 +31,7 @@ final case class Index[F <: InstrumentDetails](f: Fixture[F], r: ItcSpectroscopy
     }
   } yield dd.map(Data.fromSeries)
 
+  // TODO: accessing baseline should live on baseline
   lazy val baseline: Option[List[Data]] = for {
     dd <- data
     ss =  dd.indices

@@ -117,6 +117,8 @@ object Baseline {
 
   def main(args: Array[String]) {
 
+//    Baseline.write("/Users/fnussber/Downloads/GmosBaseline.zip", BaselineGmos.Fixtures.filter(f => f.odp.calculationMethod.isInstanceOf[Spectroscopy]))
+
     // TODO: we only support spectroscopy for now, add imaging or keep filtering here?
     new DataDiffViewer(BaselineGmos.Fixtures.filter(f => f.odp.calculationMethod.isInstanceOf[Spectroscopy]))
 //    new DataDiffViewer("/Users/fnussber/Downloads/GnirsBaseline.zip", BaselineGnirs.Fixtures.filter(f => f.odp.calculationMethod.isInstanceOf[Spectroscopy]))
